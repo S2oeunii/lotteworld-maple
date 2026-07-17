@@ -80,14 +80,26 @@ export function MapExplorer() {
           willChange: 'transform',
         }}
       >
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          ref={imageRef}
-          src="/bg.svg"
-          alt="롯데월드 지도"
-          draggable={false}
-          className="block max-w-none"
-        />
+        <div className="relative">
+          {/* 배경 사진 — svg와 동일 크기로 고정 */}
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/bg.jpg"
+            alt=""
+            draggable={false}
+            aria-hidden="true"
+            className="absolute inset-0 block max-w-none w-full h-full object-fill"
+          />
+          {/* 지도 SVG — 자연 크기로 레이어 크기 결정 */}
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            ref={imageRef}
+            src="/bg.svg"
+            alt="롯데월드 지도"
+            draggable={false}
+            className="relative block max-w-none"
+          />
+        </div>
       </div>
     </div>
   );
