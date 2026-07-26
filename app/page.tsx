@@ -27,6 +27,19 @@ export default function Page() {
          50%       { transform: translate(20px, 30px); }
        }
        #Snail { animation: snail-walk 3s ease-in-out infinite; }
+       @keyframes balloon-float {
+         0%, 100% { transform: translate(0, 0); }
+         30%       { transform: translate(14px, -28px); }
+         60%       { transform: translate(-10px, -18px); }
+       }
+       #Balloon { animation: balloon-float 4s ease-in-out infinite; }
+       @keyframes slime-fly {
+         0%, 100% { transform: translate(0, 0); }
+         25%       { transform: translate(30px, -25px); }
+         50%       { transform: translate(-20px, -40px); }
+         75%       { transform: translate(15px, -15px); }
+       }
+       #Slime { animation: slime-fly 1.2s ease-in-out infinite; }
        </style>`
     );
 
