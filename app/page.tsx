@@ -8,13 +8,19 @@ export default function Page() {
     'utf-8'
   );
 
-  // XML 선언 제거 + Castle 호버 CSS 주입
+  // XML 선언 제거 + Castle 호버 + Pinkbin 점프 애니메이션 CSS 주입
   const svgContent = raw
     .replace(/^<\?xml[^?]*\?>\s*/i, '')
     .replace(
       '</style>',
       `#Castle { cursor: default; }
        #Castle:hover ~ #Castle_x5F_hover { display: block !important; }
+       @keyframes pinkbin-jump {
+         0%, 100% { transform: translateY(0); animation-timing-function: ease-in; }
+         45%       { transform: translateY(-40px); animation-timing-function: ease-out; }
+         55%       { transform: translateY(-40px); }
+       }
+       #Pinkbin { animation: pinkbin-jump 1s infinite; }
        </style>`
     );
 
