@@ -4,7 +4,7 @@ import { useRef, useState, useEffect, useLayoutEffect } from 'react';
 
 // SVG 원본 크기 (JS 계산용, CSS px 아님)
 const SVG_W = 3884;
-const SVG_H = 2172.12;
+const SVG_H = 2165.52;
 // 1920×1080 기준 초기 x 오프셋 비율
 const START_X_RATIO = 300 / 1920;
 
