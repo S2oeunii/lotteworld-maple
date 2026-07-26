@@ -14,6 +14,7 @@ export default function Page() {
     .replace(
       '</style>',
       `#Castle { cursor: default; }
+       #Castle_x5F_hover { pointer-events: none; }
        #Castle:hover ~ #Castle_x5F_hover { display: block !important; }
        @keyframes pinkbin-jump {
          0%, 100% { transform: translateY(0); animation-timing-function: ease-in; }

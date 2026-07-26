@@ -32,11 +32,20 @@ export function MapExplorer({ svgContent }: { svgContent: string }) {
     setOffset({ x, y });
   }, []);
 
+  function isCastleTarget(target: EventTarget | null): boolean {
+    const castle = svgWrapRef.current?.querySelector('#Castle');
+    return !!castle?.contains(target as Node);
+  }
 
   function onPointerDown(e: React.PointerEvent<HTMLDivElement>) {
+    // Castle 위 클릭은 드래그 시작 안 함
+    if (isCastleTarget(e.target)) return;
+
     (e.currentTarget as HTMLDivElement).setPointerCapture(e.pointerId);
     dragging.current = true;
     lastPos.current = { x: e.clientX, y: e.clientY };
+    // 드래그 중 CSS hover 감지 차단 → Castle_hover 깜빡임 방지
+    if (svgWrapRef.current) svgWrapRef.current.style.pointerEvents = 'none';
   }
 
   function onPointerMove(e: React.PointerEvent<HTMLDivElement>) {
@@ -49,6 +58,8 @@ export function MapExplorer({ svgContent }: { svgContent: string }) {
 
   function onPointerUp() {
     dragging.current = false;
+    // 드래그 끝나면 hover 복원
+    if (svgWrapRef.current) svgWrapRef.current.style.pointerEvents = '';
   }
 
   useEffect(() => {
