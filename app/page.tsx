@@ -22,6 +22,11 @@ export default function Page() {
          55%       { transform: translateY(-40px); }
        }
        #Pinkbin { animation: pinkbin-jump 1s infinite; }
+       @keyframes snail-walk {
+         0%, 100% { transform: translate(-10px, -7px); }
+         50%       { transform: translate(20px, 30px); }
+       }
+       #Snail { animation: snail-walk 3s ease-in-out infinite; }
        </style>`
     );
 
