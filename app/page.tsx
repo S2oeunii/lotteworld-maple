@@ -49,6 +49,13 @@ export default function Page() {
          100% { transform: translate(0px, 0px); }
        }
        #Jyrospin:hover ~ #Jyro_x5F_ride { animation: jyro-ride-anim 1.3s linear infinite; }
+       #RollerCoater { cursor: default; }
+       #RollerCoaster_x5F_ride { pointer-events: none; }
+       @keyframes roller-ride-anim {
+         0%, 100% { transform: translateX(-35px); }
+         50%       { transform: translateX(35px); }
+       }
+       #RollerCoater:hover ~ #RollerCoaster_x5F_ride { animation: roller-ride-anim 0.8s ease-in-out infinite; }
        </style>`
     );
 
