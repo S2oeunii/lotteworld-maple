@@ -56,7 +56,51 @@ export default function Page() {
          50%       { transform: translateX(35px); }
        }
        #RollerCoater:hover ~ #RollerCoaster_x5F_ride { animation: roller-ride-anim 0.8s ease-in-out infinite; }
+       #Store { cursor: default; }
+       #Store_particles { pointer-events: none; display: none; }
+       #Store:hover ~ #Store_particles { display: block; }
+       @keyframes sp1  { 0%{transform:translate(0,0);opacity:1} 70%{opacity:0.8} 100%{transform:translate(-110px,-170px);opacity:0} }
+       @keyframes sp2  { 0%{transform:translate(0,0);opacity:1} 70%{opacity:0.8} 100%{transform:translate(110px,-170px);opacity:0} }
+       @keyframes sp3  { 0%{transform:translate(0,0);opacity:1} 70%{opacity:0.8} 100%{transform:translate(0,-190px);opacity:0} }
+       @keyframes sp4  { 0%{transform:translate(0,0);opacity:1} 70%{opacity:0.8} 100%{transform:translate(-160px,-100px);opacity:0} }
+       @keyframes sp5  { 0%{transform:translate(0,0);opacity:1} 70%{opacity:0.8} 100%{transform:translate(160px,-100px);opacity:0} }
+       @keyframes sp6  { 0%{transform:translate(0,0);opacity:1} 70%{opacity:0.8} 100%{transform:translate(-75px,-195px);opacity:0} }
+       @keyframes sp7  { 0%{transform:translate(0,0);opacity:1} 70%{opacity:0.8} 100%{transform:translate(75px,-195px);opacity:0} }
+       @keyframes sp8  { 0%{transform:translate(0,0);opacity:1} 70%{opacity:0.8} 100%{transform:translate(180px,-60px);opacity:0} }
+       @keyframes sp9  { 0%{transform:translate(0,0);opacity:1} 70%{opacity:0.8} 100%{transform:translate(-180px,-60px);opacity:0} }
+       @keyframes sp10 { 0%{transform:translate(0,0);opacity:1} 70%{opacity:0.8} 100%{transform:translate(50px,-200px);opacity:0} }
+       @keyframes sp11 { 0%{transform:translate(0,0);opacity:1} 70%{opacity:0.8} 100%{transform:translate(-50px,-200px);opacity:0} }
+       @keyframes sp12 { 0%{transform:translate(0,0);opacity:1} 70%{opacity:0.8} 100%{transform:translate(130px,-150px);opacity:0} }
+       #Store_particles circle:nth-child(1) {animation:sp1  0.9s ease-out infinite;animation-delay:0s}
+       #Store_particles circle:nth-child(2) {animation:sp2  0.9s ease-out infinite;animation-delay:0.07s}
+       #Store_particles circle:nth-child(3) {animation:sp3  0.9s ease-out infinite;animation-delay:0.14s}
+       #Store_particles circle:nth-child(4) {animation:sp4  0.9s ease-out infinite;animation-delay:0.21s}
+       #Store_particles circle:nth-child(5) {animation:sp5  0.9s ease-out infinite;animation-delay:0.28s}
+       #Store_particles circle:nth-child(6) {animation:sp6  0.9s ease-out infinite;animation-delay:0.05s}
+       #Store_particles circle:nth-child(7) {animation:sp7  0.9s ease-out infinite;animation-delay:0.12s}
+       #Store_particles circle:nth-child(8) {animation:sp8  0.9s ease-out infinite;animation-delay:0.19s}
+       #Store_particles circle:nth-child(9) {animation:sp9  0.9s ease-out infinite;animation-delay:0.26s}
+       #Store_particles circle:nth-child(10){animation:sp10 0.9s ease-out infinite;animation-delay:0.33s}
+       #Store_particles circle:nth-child(11){animation:sp11 0.9s ease-out infinite;animation-delay:0.08s}
+       #Store_particles circle:nth-child(12){animation:sp12 0.9s ease-out infinite;animation-delay:0.16s}
        </style>`
+    )
+    .replace(
+      '</svg>',
+      `<g id="Store_particles">
+        <circle cx="3320" cy="1180" r="10" fill="#FFD700"/>
+        <circle cx="3320" cy="1180" r="8"  fill="#FF69B4"/>
+        <circle cx="3320" cy="1180" r="9"  fill="#00BFFF"/>
+        <circle cx="3320" cy="1180" r="12" fill="#FF6347"/>
+        <circle cx="3320" cy="1180" r="7"  fill="#98FB98"/>
+        <circle cx="3320" cy="1180" r="9"  fill="#FFA500"/>
+        <circle cx="3320" cy="1180" r="6"  fill="#DA70D6"/>
+        <circle cx="3320" cy="1180" r="11" fill="#FFD700"/>
+        <circle cx="3320" cy="1180" r="8"  fill="#FF1493"/>
+        <circle cx="3320" cy="1180" r="7"  fill="#00CED1"/>
+        <circle cx="3320" cy="1180" r="10" fill="#ADFF2F"/>
+        <circle cx="3320" cy="1180" r="9"  fill="#FF6347"/>
+      </g></svg>`
     );
 
   return <MapExplorer svgContent={svgContent} />;
