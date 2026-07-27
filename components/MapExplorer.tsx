@@ -32,15 +32,7 @@ export function MapExplorer({ svgContent }: { svgContent: string }) {
     setOffset({ x, y });
   }, []);
 
-  function isCastleTarget(target: EventTarget | null): boolean {
-    const castle = svgWrapRef.current?.querySelector('#Castle');
-    return !!castle?.contains(target as Node);
-  }
-
   function onPointerDown(e: React.PointerEvent<HTMLDivElement>) {
-    // Castle 위 클릭은 드래그 시작 안 함
-    if (isCastleTarget(e.target)) return;
-
     (e.currentTarget as HTMLDivElement).setPointerCapture(e.pointerId);
     dragging.current = true;
     lastPos.current = { x: e.clientX, y: e.clientY };
