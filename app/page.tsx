@@ -40,6 +40,15 @@ export default function Page() {
          75%       { transform: translate(15px, -15px); }
        }
        #Slime { animation: slime-fly 1.2s ease-in-out infinite; }
+       #Jyrospin { cursor: default; }
+       #Jyro_x5F_ride { pointer-events: none; }
+       @keyframes jyro-ride-anim {
+         0%   { transform: translate(0px, 0px); }
+         33%  { transform: translate(-40px, -40px); }
+         66%  { transform: translateX(28px); }
+         100% { transform: translate(0px, 0px); }
+       }
+       #Jyrospin:hover ~ #Jyro_x5F_ride { animation: jyro-ride-anim 1.3s linear infinite; }
        </style>`
     );
 
