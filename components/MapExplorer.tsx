@@ -6,9 +6,15 @@ const SVG_W = 3884;
 const SVG_H = 2165.52;
 const START_X_RATIO = 300 / 1920;
 
-export function MapExplorer({ svgContent }: { svgContent: string }) {
+type Props = {
+  svgContent: string;
+  navigateRef?: React.MutableRefObject<((svgX: number, svgY: number) => void) | null>;
+};
+
+export function MapExplorer({ svgContent, navigateRef }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const svgWrapRef = useRef<HTMLDivElement>(null);
+  const translateDivRef = useRef<HTMLDivElement>(null);
 
   const [offset, setOffset] = useState({ x: 0, y: 0 });
   const dragging = useRef(false);
@@ -32,7 +38,25 @@ export function MapExplorer({ svgContent }: { svgContent: string }) {
     setOffset({ x, y });
   }, []);
 
+  function navigateTo(svgX: number, svgY: number) {
+    const vw = containerRef.current?.clientWidth ?? window.innerWidth;
+    const vh = containerRef.current?.clientHeight ?? window.innerHeight;
+    const target = clamp({ x: vw / 2 - svgX, y: vh / 2 - svgY });
+    if (translateDivRef.current) {
+      translateDivRef.current.style.transition = 'transform 0.65s cubic-bezier(0.4,0,0.2,1)';
+    }
+    setOffset(target);
+    setTimeout(() => {
+      if (translateDivRef.current) translateDivRef.current.style.transition = '';
+    }, 700);
+  }
+
+  useEffect(() => {
+    if (navigateRef) navigateRef.current = navigateTo;
+  });
+
   function onPointerDown(e: React.PointerEvent<HTMLDivElement>) {
+    if (translateDivRef.current) translateDivRef.current.style.transition = '';
     (e.currentTarget as HTMLDivElement).setPointerCapture(e.pointerId);
     dragging.current = true;
     lastPos.current = { x: e.clientX, y: e.clientY };
@@ -72,6 +96,7 @@ export function MapExplorer({ svgContent }: { svgContent: string }) {
       onPointerCancel={onPointerUp}
     >
       <div
+        ref={translateDivRef}
         style={{
           position: 'absolute',
           transform: `translate(${offset.x}px, ${offset.y}px)`,

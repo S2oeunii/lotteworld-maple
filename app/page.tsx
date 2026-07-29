@@ -1,6 +1,6 @@
 import fs from 'fs';
 import path from 'path';
-import { MapExplorer } from '@/components/MapExplorer';
+import { MapView } from '@/components/MapView';
 
 export default function Page() {
   const raw = fs.readFileSync(
@@ -103,5 +103,5 @@ export default function Page() {
       </g></svg>`
     );
 
-  return <MapExplorer svgContent={svgContent} />;
+  return <MapView svgContent={svgContent} />;
 }
