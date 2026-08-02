@@ -9,9 +9,10 @@ const START_X_RATIO = 300 / 1920;
 type Props = {
   svgContent: string;
   navigateRef?: React.MutableRefObject<((svgX: number, svgY: number) => void) | null>;
+  onStoreClick?: () => void;
 };
 
-export function MapExplorer({ svgContent, navigateRef }: Props) {
+export function MapExplorer({ svgContent, navigateRef, onStoreClick }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const svgWrapRef = useRef<HTMLDivElement>(null);
   const translateDivRef = useRef<HTMLDivElement>(null);
@@ -19,6 +20,8 @@ export function MapExplorer({ svgContent, navigateRef }: Props) {
   const [offset, setOffset] = useState({ x: 0, y: 0 });
   const dragging = useRef(false);
   const lastPos = useRef({ x: 0, y: 0 });
+  const dragDistance = useRef(0);
+  const pendingStoreClick = useRef(false);
 
   function clamp(raw: { x: number; y: number }) {
     const vw = containerRef.current?.clientWidth ?? 0;
@@ -57,8 +60,11 @@ export function MapExplorer({ svgContent, navigateRef }: Props) {
 
   function onPointerDown(e: React.PointerEvent<HTMLDivElement>) {
     if (translateDivRef.current) translateDivRef.current.style.transition = '';
+    // pointer-events:none 설정 전에 Store 클릭 여부 미리 확인
+    pendingStoreClick.current = !!(e.target as Element).closest('#Store');
     (e.currentTarget as HTMLDivElement).setPointerCapture(e.pointerId);
     dragging.current = true;
+    dragDistance.current = 0;
     lastPos.current = { x: e.clientX, y: e.clientY };
     // 드래그 중 CSS hover 감지 차단 → Castle_hover 깜빡임 방지
     if (svgWrapRef.current) svgWrapRef.current.style.pointerEvents = 'none';
@@ -68,6 +74,7 @@ export function MapExplorer({ svgContent, navigateRef }: Props) {
     if (!dragging.current) return;
     const dx = e.clientX - lastPos.current.x;
     const dy = e.clientY - lastPos.current.y;
+    dragDistance.current += Math.sqrt(dx * dx + dy * dy);
     lastPos.current = { x: e.clientX, y: e.clientY };
     setOffset((prev) => clamp({ x: prev.x + dx, y: prev.y + dy }));
   }
@@ -76,6 +83,11 @@ export function MapExplorer({ svgContent, navigateRef }: Props) {
     dragging.current = false;
     // 드래그 끝나면 hover 복원
     if (svgWrapRef.current) svgWrapRef.current.style.pointerEvents = '';
+    // 드래그 없이 Store 눌렀으면 팝업 열기
+    if (pendingStoreClick.current && dragDistance.current <= 5) {
+      onStoreClick?.();
+    }
+    pendingStoreClick.current = false;
   }
 
   useEffect(() => {
