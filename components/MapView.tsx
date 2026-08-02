@@ -3,11 +3,16 @@
 import { useRef, useCallback, useState } from 'react';
 import { MapExplorer } from './MapExplorer';
 import { NavBar } from './NavBar';
+import { CastlePopup } from './CastlePopup';
+import { JyrospinPopup } from './JyrospinPopup';
+import { RollerCoasterPopup } from './RollerCoasterPopup';
 import { StorePopup } from './StorePopup';
+
+type ActivePopup = 'Castle' | 'Jyrospin' | 'RollerCoater' | 'Store' | null;
 
 export function MapView({ svgContent }: { svgContent: string }) {
   const navigateRef = useRef<((svgX: number, svgY: number) => void) | null>(null);
-  const [showStorePopup, setShowStorePopup] = useState(false);
+  const [activePopup, setActivePopup] = useState<ActivePopup>(null);
 
   const onNavClick = useCallback((svgX: number, svgY: number) => {
     navigateRef.current?.(svgX, svgY);
@@ -18,10 +23,13 @@ export function MapView({ svgContent }: { svgContent: string }) {
       <MapExplorer
         svgContent={svgContent}
         navigateRef={navigateRef}
-        onStoreClick={() => setShowStorePopup(true)}
+        onLayerClick={setActivePopup}
       />
       <NavBar onNavClick={onNavClick} />
-      {showStorePopup && <StorePopup onClose={() => setShowStorePopup(false)} />}
+      {activePopup === 'Castle'      && <CastlePopup       onClose={() => setActivePopup(null)} />}
+      {activePopup === 'Jyrospin'    && <JyrospinPopup     onClose={() => setActivePopup(null)} />}
+      {activePopup === 'RollerCoater'&& <RollerCoasterPopup onClose={() => setActivePopup(null)} />}
+      {activePopup === 'Store'       && <StorePopup        onClose={() => setActivePopup(null)} />}
     </>
   );
 }

@@ -6,13 +6,17 @@ const SVG_W = 3884;
 const SVG_H = 2165.52;
 const START_X_RATIO = 300 / 1920;
 
+type LayerId = 'Castle' | 'Jyrospin' | 'RollerCoater' | 'Store';
+
 type Props = {
   svgContent: string;
   navigateRef?: React.MutableRefObject<((svgX: number, svgY: number) => void) | null>;
-  onStoreClick?: () => void;
+  onLayerClick?: (layer: LayerId) => void;
 };
 
-export function MapExplorer({ svgContent, navigateRef, onStoreClick }: Props) {
+const CLICKABLE_LAYERS: LayerId[] = ['Castle', 'Jyrospin', 'RollerCoater', 'Store'];
+
+export function MapExplorer({ svgContent, navigateRef, onLayerClick }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const svgWrapRef = useRef<HTMLDivElement>(null);
   const translateDivRef = useRef<HTMLDivElement>(null);
@@ -21,7 +25,7 @@ export function MapExplorer({ svgContent, navigateRef, onStoreClick }: Props) {
   const dragging = useRef(false);
   const lastPos = useRef({ x: 0, y: 0 });
   const dragDistance = useRef(0);
-  const pendingStoreClick = useRef(false);
+  const pendingLayerClick = useRef<LayerId | null>(null);
 
   function clamp(raw: { x: number; y: number }) {
     const vw = containerRef.current?.clientWidth ?? 0;
@@ -60,8 +64,10 @@ export function MapExplorer({ svgContent, navigateRef, onStoreClick }: Props) {
 
   function onPointerDown(e: React.PointerEvent<HTMLDivElement>) {
     if (translateDivRef.current) translateDivRef.current.style.transition = '';
-    // pointer-events:none 설정 전에 Store 클릭 여부 미리 확인
-    pendingStoreClick.current = !!(e.target as Element).closest('#Store');
+    // pointer-events:none 설정 전에 클릭 레이어 미리 확인
+    const target = e.target as Element;
+    pendingLayerClick.current =
+      CLICKABLE_LAYERS.find((id) => target.closest(`#${id}`)) ?? null;
     (e.currentTarget as HTMLDivElement).setPointerCapture(e.pointerId);
     dragging.current = true;
     dragDistance.current = 0;
@@ -83,11 +89,11 @@ export function MapExplorer({ svgContent, navigateRef, onStoreClick }: Props) {
     dragging.current = false;
     // 드래그 끝나면 hover 복원
     if (svgWrapRef.current) svgWrapRef.current.style.pointerEvents = '';
-    // 드래그 없이 Store 눌렀으면 팝업 열기
-    if (pendingStoreClick.current && dragDistance.current <= 5) {
-      onStoreClick?.();
+    // 드래그 없이 레이어 눌렀으면 팝업 열기
+    if (pendingLayerClick.current && dragDistance.current <= 5) {
+      onLayerClick?.(pendingLayerClick.current);
     }
-    pendingStoreClick.current = false;
+    pendingLayerClick.current = null;
   }
 
   useEffect(() => {
