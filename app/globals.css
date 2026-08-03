@@ -1,5 +1,12 @@
 @import "tailwindcss";
 
+@keyframes dizzy-wobble {
+  0%, 100% { transform: rotate(-10deg) translateY(0px); }
+  25%       { transform: rotate(10deg) translateY(-6px); }
+  50%       { transform: rotate(-7deg) translateY(3px); }
+  75%       { transform: rotate(8deg) translateY(-3px); }
+}
+
 @theme {
   --font-cookierun: 'CookieRun', sans-serif;
   --font-pretendard: 'Pretendard', sans-serif;
