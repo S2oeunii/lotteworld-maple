@@ -1,6 +1,8 @@
 'use client';
 
-import { useRef, useState, useEffect, useLayoutEffect } from 'react';
+import { useRef, useEffect, useLayoutEffect } from 'react';
+import { useSpring, animated } from '@react-spring/web';
+import { useDrag } from '@use-gesture/react';
 
 const SVG_W = 3884;
 const SVG_H = 2165.52;
@@ -19,12 +21,6 @@ const CLICKABLE_LAYERS: LayerId[] = ['Castle', 'Jyrospin', 'RollerCoater', 'Stor
 export function MapExplorer({ svgContent, navigateRef, onLayerClick }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const svgWrapRef = useRef<HTMLDivElement>(null);
-  const translateDivRef = useRef<HTMLDivElement>(null);
-
-  const [offset, setOffset] = useState({ x: 0, y: 0 });
-  const dragging = useRef(false);
-  const lastPos = useRef({ x: 0, y: 0 });
-  const dragDistance = useRef(0);
   const pendingLayerClick = useRef<LayerId | null>(null);
 
   function clamp(raw: { x: number; y: number }) {
@@ -36,69 +32,62 @@ export function MapExplorer({ svgContent, navigateRef, onLayerClick }: Props) {
     };
   }
 
+  const [{ x, y }, api] = useSpring(() => ({ x: 0, y: 0 }));
+
   useLayoutEffect(() => {
     const vw = window.innerWidth;
     const vh = window.innerHeight;
-    const x = SVG_W > vw ? Math.min(0, (vw - SVG_W) / 2 + START_X_RATIO * vw) : (vw - SVG_W) / 2 + START_X_RATIO * vw;
-    const y = SVG_H > vh ? vh - SVG_H : (vh - SVG_H) / 2;
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setOffset({ x, y });
-  }, []);
+    const ix = SVG_W > vw ? Math.min(0, (vw - SVG_W) / 2 + START_X_RATIO * vw) : (vw - SVG_W) / 2 + START_X_RATIO * vw;
+    const iy = SVG_H > vh ? vh - SVG_H : (vh - SVG_H) / 2;
+    api.set({ x: ix, y: iy });
+  }, [api]);
 
   function navigateTo(svgX: number, svgY: number) {
     const vw = containerRef.current?.clientWidth ?? window.innerWidth;
     const vh = containerRef.current?.clientHeight ?? window.innerHeight;
     const target = clamp({ x: vw / 2 - svgX, y: vh / 2 - svgY });
-    if (translateDivRef.current) {
-      translateDivRef.current.style.transition = 'transform 0.65s cubic-bezier(0.4,0,0.2,1)';
-    }
-    setOffset(target);
-    setTimeout(() => {
-      if (translateDivRef.current) translateDivRef.current.style.transition = '';
-    }, 700);
+    api.start({ x: target.x, y: target.y, config: { tension: 170, friction: 40 } });
   }
 
   useEffect(() => {
     if (navigateRef) navigateRef.current = navigateTo;
   });
 
-  function onPointerDown(e: React.PointerEvent<HTMLDivElement>) {
-    if (translateDivRef.current) translateDivRef.current.style.transition = '';
-    // pointer-events:none 설정 전에 클릭 레이어 미리 확인
-    const target = e.target as Element;
-    pendingLayerClick.current =
-      CLICKABLE_LAYERS.find((id) => target.closest(`#${id}`)) ?? null;
-    (e.currentTarget as HTMLDivElement).setPointerCapture(e.pointerId);
-    dragging.current = true;
-    dragDistance.current = 0;
-    lastPos.current = { x: e.clientX, y: e.clientY };
-    // 드래그 중 CSS hover 감지 차단 → Castle_hover 깜빡임 방지
-    if (svgWrapRef.current) svgWrapRef.current.style.pointerEvents = 'none';
-  }
+  const bind = useDrag(
+    ({ event, first, last, tap, movement: [mx, my], velocity: [vx, vy], direction: [dx, dy], memo }) => {
+      if (first) {
+        api.stop();
+        const target = event.target as Element;
+        pendingLayerClick.current = CLICKABLE_LAYERS.find((id) => target.closest(`#${id}`)) ?? null;
+        if (svgWrapRef.current) svgWrapRef.current.style.pointerEvents = 'none';
+        memo = { x: x.get(), y: y.get() };
+      }
 
-  function onPointerMove(e: React.PointerEvent<HTMLDivElement>) {
-    if (!dragging.current) return;
-    const dx = e.clientX - lastPos.current.x;
-    const dy = e.clientY - lastPos.current.y;
-    dragDistance.current += Math.sqrt(dx * dx + dy * dy);
-    lastPos.current = { x: e.clientX, y: e.clientY };
-    setOffset((prev) => clamp({ x: prev.x + dx, y: prev.y + dy }));
-  }
+      const rawX = (memo as { x: number; y: number }).x + mx;
+      const rawY = (memo as { x: number; y: number }).y + my;
 
-  function onPointerUp() {
-    dragging.current = false;
-    // 드래그 끝나면 hover 복원
-    if (svgWrapRef.current) svgWrapRef.current.style.pointerEvents = '';
-    // 드래그 없이 레이어 눌렀으면 팝업 열기
-    if (pendingLayerClick.current && dragDistance.current <= 5) {
-      onLayerClick?.(pendingLayerClick.current);
-    }
-    pendingLayerClick.current = null;
-  }
+      if (last) {
+        if (svgWrapRef.current) svgWrapRef.current.style.pointerEvents = '';
+        if (tap && pendingLayerClick.current) {
+          onLayerClick?.(pendingLayerClick.current);
+        }
+        pendingLayerClick.current = null;
+
+        const INERTIA = 350;
+        const target = clamp({ x: rawX + vx * dx * INERTIA, y: rawY + vy * dy * INERTIA });
+        api.start({ x: target.x, y: target.y, config: { tension: 90, friction: 24 } });
+      } else {
+        api.set(clamp({ x: rawX, y: rawY }));
+      }
+
+      return memo;
+    },
+    { filterTaps: true, tapsThreshold: 5 }
+  );
 
   useEffect(() => {
     function onResize() {
-      setOffset((prev) => clamp(prev));
+      api.set(clamp({ x: x.get(), y: y.get() }));
     }
     window.addEventListener('resize', onResize);
     return () => window.removeEventListener('resize', onResize);
@@ -108,21 +97,17 @@ export function MapExplorer({ svgContent, navigateRef, onLayerClick }: Props) {
     <div
       ref={containerRef}
       className="w-screen h-screen overflow-hidden bg-neutral-900 select-none cursor-grab active:cursor-grabbing"
-      onPointerDown={onPointerDown}
-      onPointerMove={onPointerMove}
-      onPointerUp={onPointerUp}
-      onPointerCancel={onPointerUp}
+      {...bind()}
     >
-      <div
-        ref={translateDivRef}
+      <animated.div
         style={{
           position: 'absolute',
-          transform: `translate(${offset.x}px, ${offset.y}px)`,
+          x,
+          y,
           willChange: 'transform',
         }}
       >
         <div className="relative" style={{ width: SVG_W, height: SVG_H }}>
-          {/* 배경 사진 */}
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src="/bg.jpg"
@@ -131,14 +116,13 @@ export function MapExplorer({ svgContent, navigateRef, onLayerClick }: Props) {
             aria-hidden="true"
             className="absolute inset-0 block max-w-none w-full h-full object-fill"
           />
-          {/* 인라인 SVG */}
           <div
             ref={svgWrapRef}
             className="relative"
             dangerouslySetInnerHTML={{ __html: svgContent }}
           />
         </div>
-      </div>
+      </animated.div>
     </div>
   );
 }
