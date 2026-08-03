@@ -4,6 +4,9 @@ import './globals.css';
 export const metadata: Metadata = {
   title: '롯데월드 메이플 — 지도 탐험',
   description: '롯데월드를 지도로 탐험해보세요',
+  icons: {
+    icon: '/pinkbin.png',
+  },
 };
 
 export default function RootLayout({
