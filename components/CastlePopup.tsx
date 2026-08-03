@@ -10,7 +10,7 @@ export function CastlePopup({ onClose }: Props) {
         <img src="/popup_bg.png" alt="castle popup" draggable={false} style={{ width: '46.88vw', height: '69.72vh' }} />
         <button
           onClick={onClose}
-          className="absolute top-[13.5vh] right-[1.6vw]"
+          className="absolute top-[13.5vh] right-[1.6vw] cursor-pointer"
         >
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/closeBtn.png" alt="close" draggable={false} style={{ width: '4.48vw', height: '6.30vh' }} />

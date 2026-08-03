@@ -10,7 +10,7 @@ export function JyrospinPopup({ onClose }: Props) {
         <img src="/popup_bg2.png" alt="jyrospin popup" draggable={false} style={{ width: '46.88vw', height: '69.72vh' }} />
 
         {/* 닫기 버튼 */}
-        <button onClick={onClose} className="absolute top-[13.5vh] right-[1.6vw]">
+        <button onClick={onClose} className="absolute top-[13.5vh] right-[1.6vw] cursor-pointer">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/closeBtn.png" alt="close" draggable={false} style={{ width: '4.48vw', height: '6.30vh' }} />
         </button>

@@ -20,7 +20,7 @@ export function NavBar({ onNavClick }: Props) {
         <button
           key={i}
           onClick={() => onNavClick(item.svgX, item.svgY)}
-          className="flex items-center justify-center w-[3.75vw] h-[6.67vh] rounded-full transition-transform hover:scale-110 active:scale-95"
+          className="flex items-center justify-center w-[3.75vw] h-[6.67vh] rounded-full transition-transform hover:scale-110 active:scale-95 cursor-pointer"
         >
           <Image
             src={item.src}

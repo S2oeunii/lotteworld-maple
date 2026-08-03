@@ -57,7 +57,7 @@ export default function Page() {
        }
        #RollerCoater:hover ~ #RollerCoaster_x5F_ride { animation: roller-ride-anim 0.8s ease-in-out infinite; }
        #Stone { pointer-events: none; }
-       @keyframes stone-bounce {
+       @keyframes stone-map-bounce {
          0%   { transform: translate(0px, 0px);       animation-timing-function: ease-in; }
          12%  { transform: translate(40px, -90px);    animation-timing-function: ease-out; }
          24%  { transform: translate(80px, -55px);    animation-timing-function: ease-in; }
@@ -69,7 +69,7 @@ export default function Page() {
          88%  { transform: translate(35px, -90px);    animation-timing-function: ease-out; }
          100% { transform: translate(0px, 0px); }
        }
-       #RollerCoater:hover ~ #Stone { animation: stone-bounce 2.2s linear infinite; }
+       #RollerCoater:hover ~ #Stone { animation: stone-map-bounce 2.2s linear infinite; }
        #Store { cursor: default; }
        #Pin1, #Pin21, #Pin31, #Pin4 { pointer-events: none; display: block !important; }
        @keyframes pin-float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-28px); } }
