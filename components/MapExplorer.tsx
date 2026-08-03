@@ -7,6 +7,7 @@ import { useDrag } from '@use-gesture/react';
 const SVG_W = 3884;
 const SVG_H = 2165.52;
 const START_X_RATIO = 300 / 1920;
+const INERTIA = 350;
 
 type LayerId = 'Castle' | 'Jyrospin' | 'RollerCoater' | 'Store';
 
@@ -53,18 +54,17 @@ export function MapExplorer({ svgContent, navigateRef, onLayerClick }: Props) {
     if (navigateRef) navigateRef.current = navigateTo;
   });
 
-  const bind = useDrag(
-    ({ event, first, last, tap, movement: [mx, my], velocity: [vx, vy], direction: [dx, dy], memo }) => {
+  // use-gesture를 target ref로 바인딩 → React onPointerDown과 충돌 없음
+  useDrag(
+    ({ first, last, tap, movement: [mx, my], velocity: [vx, vy], direction: [dx, dy], memo }) => {
       if (first) {
         api.stop();
-        const target = event.target as Element;
-        pendingLayerClick.current = CLICKABLE_LAYERS.find((id) => target.closest(`#${id}`)) ?? null;
-        if (svgWrapRef.current) svgWrapRef.current.style.pointerEvents = 'none';
         memo = { x: x.get(), y: y.get() };
       }
 
-      const rawX = (memo as { x: number; y: number }).x + mx;
-      const rawY = (memo as { x: number; y: number }).y + my;
+      const { x: ox, y: oy } = memo as { x: number; y: number };
+      const rawX = ox + mx;
+      const rawY = oy + my;
 
       if (last) {
         if (svgWrapRef.current) svgWrapRef.current.style.pointerEvents = '';
@@ -73,17 +73,26 @@ export function MapExplorer({ svgContent, navigateRef, onLayerClick }: Props) {
         }
         pendingLayerClick.current = null;
 
-        const INERTIA = 350;
-        const target = clamp({ x: rawX + vx * dx * INERTIA, y: rawY + vy * dy * INERTIA });
-        api.start({ x: target.x, y: target.y, config: { tension: 90, friction: 24 } });
+        if (!tap) {
+          const tgt = clamp({ x: rawX + vx * dx * INERTIA, y: rawY + vy * dy * INERTIA });
+          api.start({ x: tgt.x, y: tgt.y, config: { tension: 90, friction: 24 } });
+        }
       } else {
         api.set(clamp({ x: rawX, y: rawY }));
       }
 
       return memo;
     },
-    { filterTaps: true, tapsThreshold: 5 }
+    { target: containerRef, tapsThreshold: 5, pointer: { capture: false } }
   );
+
+  function onPointerDown(e: React.PointerEvent<HTMLDivElement>) {
+    const target = e.target as Element;
+    pendingLayerClick.current = CLICKABLE_LAYERS.find((id) => target.closest(`#${id}`)) ?? null;
+    // 포인터를 컨테이너로 캡처 (드래그 중 hover 이벤트 차단)
+    (e.currentTarget as HTMLDivElement).setPointerCapture(e.pointerId);
+    if (svgWrapRef.current) svgWrapRef.current.style.pointerEvents = 'none';
+  }
 
   useEffect(() => {
     function onResize() {
@@ -97,7 +106,7 @@ export function MapExplorer({ svgContent, navigateRef, onLayerClick }: Props) {
     <div
       ref={containerRef}
       className="w-screen h-screen overflow-hidden bg-neutral-900 select-none cursor-grab active:cursor-grabbing"
-      {...bind()}
+      onPointerDown={onPointerDown}
     >
       <animated.div
         style={{
