@@ -1,11 +1,16 @@
 'use client';
 
-import { useRef, useEffect, useLayoutEffect } from 'react';
+import {
+  useRef,
+  useEffect,
+  useLayoutEffect,
+} from 'react';
 import { useSpring, animated } from '@react-spring/web';
 import { useDrag } from '@use-gesture/react';
 
 const SVG_W = 3884;
 const SVG_H = 2165.52;
+
 const START_X_RATIO = 300 / 1920;
 
 // 관성 정도
@@ -26,7 +31,6 @@ type Props = {
 
   onLayerClick?: (layer: LayerId) => void;
 
-  // 현재 화면 중앙에 위치한 SVG 좌표
   onPositionChange?: (
     svgX: number,
     svgY: number
@@ -49,15 +53,23 @@ export function MapExplorer({
   const containerRef =
     useRef<HTMLDivElement>(null);
 
-  // 드래그 시작 당시 맵 위치
+  // ─────────────────────────────
+  // 현재 드래그 시작 위치
+  // ─────────────────────────────
   const dragStartRef = useRef({
     x: 0,
     y: 0,
   });
 
-  // 클릭한 Layer 저장
-  const pendingLayerClick =
+  // ─────────────────────────────
+  // 클릭 시작 시 어떤 Layer였는지
+  // ─────────────────────────────
+  const clickedLayerRef =
     useRef<LayerId | null>(null);
+
+  // 실제로 드래그가 발생했는지
+  const didDragRef =
+    useRef(false);
 
   // ─────────────────────────────
   // 현재 화면 중앙의 SVG 좌표
@@ -181,7 +193,7 @@ export function MapExplorer({
   }, [api]);
 
   // ─────────────────────────────
-  // NavBar → 특정 SVG 위치 이동
+  // NavBar → 특정 SVG 좌표 이동
   // ─────────────────────────────
   function navigateTo(
     svgX: number,
@@ -195,11 +207,10 @@ export function MapExplorer({
       containerRef.current?.clientHeight ??
       window.innerHeight;
 
-    const target =
-      clamp({
-        x: vw / 2 - svgX,
-        y: vh / 2 - svgY,
-      });
+    const target = clamp({
+      x: vw / 2 - svgX,
+      y: vh / 2 - svgY,
+    });
 
     api.start({
       x: target.x,
@@ -217,18 +228,64 @@ export function MapExplorer({
   // NavBar에 navigate 함수 전달
   // ─────────────────────────────
   useEffect(() => {
-    if (navigateRef) {
-      navigateRef.current =
-        navigateTo;
-    }
+    if (!navigateRef) return;
+
+    navigateRef.current =
+      navigateTo;
 
     return () => {
-      if (navigateRef) {
-        navigateRef.current =
-          null;
-      }
+      navigateRef.current =
+        null;
     };
   }, [navigateRef]);
+
+  // ─────────────────────────────
+  // Pointer Down
+  // ─────────────────────────────
+  function handlePointerDown(
+    e: React.PointerEvent<HTMLDivElement>
+  ) {
+    const target =
+      e.target as Element;
+
+    clickedLayerRef.current =
+      CLICKABLE_LAYERS.find(
+        (id) =>
+          target.closest(
+            `#${id}`
+          )
+      ) ?? null;
+
+    didDragRef.current = false;
+  }
+
+  // ─────────────────────────────
+  // Pointer Move
+  // ─────────────────────────────
+  function handlePointerMove(
+    e: React.PointerEvent<HTMLDivElement>
+  ) {
+    // 실제 이동 여부는 useDrag에서 판단
+    // 여기서는 아무것도 하지 않음
+  }
+
+  // ─────────────────────────────
+  // Pointer Up
+  // ─────────────────────────────
+  function handlePointerUp() {
+    // 드래그가 아니었을 때만 클릭 실행
+    if (
+      !didDragRef.current &&
+      clickedLayerRef.current
+    ) {
+      onLayerClick?.(
+        clickedLayerRef.current
+      );
+    }
+
+    clickedLayerRef.current =
+      null;
+  }
 
   // ─────────────────────────────
   // Drag
@@ -237,7 +294,6 @@ export function MapExplorer({
     ({
       first,
       last,
-      tap,
       movement: [mx, my],
       velocity: [vx, vy],
       direction: [dx, dy],
@@ -246,24 +302,33 @@ export function MapExplorer({
       // 드래그 시작
       // ─────────────────────────
       if (first) {
-        // 기존 관성 정지
         api.stop();
 
-        // 현재 맵 위치 저장
         dragStartRef.current = {
           x: x.get(),
           y: y.get(),
         };
+
+        didDragRef.current = false;
       }
 
-      // 드래그 시작 위치
+      // 실제로 움직였으면 드래그
+      if (
+        Math.abs(mx) > 5 ||
+        Math.abs(my) > 5
+      ) {
+        didDragRef.current = true;
+      }
+
       const ox =
         dragStartRef.current.x;
 
       const oy =
         dragStartRef.current.y;
 
-      // 현재 이동량을 더함
+      // ─────────────────────────
+      // 현재 드래그 위치
+      // ─────────────────────────
       const rawX =
         ox + mx;
 
@@ -274,21 +339,8 @@ export function MapExplorer({
       // 드래그 종료
       // ─────────────────────────
       if (last) {
-        // 클릭이면 Layer 실행
-        if (
-          tap &&
-          pendingLayerClick.current
-        ) {
-          onLayerClick?.(
-            pendingLayerClick.current
-          );
-        }
-
-        pendingLayerClick.current =
-          null;
-
-        // 드래그였으면 관성 적용
-        if (!tap) {
+        // 드래그였으면 관성
+        if (didDragRef.current) {
           const target =
             clamp({
               x:
@@ -328,7 +380,6 @@ export function MapExplorer({
           y: rawY,
         });
 
-      // 즉시 따라오기
       api.start({
         x: target.x,
         y: target.y,
@@ -338,41 +389,14 @@ export function MapExplorer({
     {
       target: containerRef,
 
-      // 5px 이하 움직임은 클릭
-      tapsThreshold: 5,
-
-      // 클릭 이벤트가 너무 빨리 잡히는 것 방지
-      filterTaps: true,
+      // 5px 이하 이동은 클릭
+      threshold: 5,
 
       pointer: {
         capture: false,
       },
     }
   );
-
-  // ─────────────────────────────
-  // Pointer Down
-  // ─────────────────────────────
-  function onPointerDown(
-    e: React.PointerEvent<HTMLDivElement>
-  ) {
-    const target =
-      e.target as Element;
-
-    // 어떤 Layer를 클릭했는지 저장
-    pendingLayerClick.current =
-      CLICKABLE_LAYERS.find(
-        (id) =>
-          target.closest(
-            `#${id}`
-          )
-      ) ?? null;
-
-    // pointer capture
-    e.currentTarget.setPointerCapture(
-      e.pointerId
-    );
-  }
 
   // ─────────────────────────────
   // Resize
@@ -422,7 +446,13 @@ export function MapExplorer({
         active:cursor-grabbing
       "
       onPointerDown={
-        onPointerDown
+        handlePointerDown
+      }
+      onPointerMove={
+        handlePointerMove
+      }
+      onPointerUp={
+        handlePointerUp
       }
     >
       <animated.div
