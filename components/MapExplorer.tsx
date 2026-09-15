@@ -49,9 +49,13 @@ export function MapExplorer({
   const containerRef =
     useRef<HTMLDivElement>(null);
 
-  const svgWrapRef =
-    useRef<HTMLDivElement>(null);
+  // 드래그 시작 당시 맵 위치
+  const dragStartRef = useRef({
+    x: 0,
+    y: 0,
+  });
 
+  // 클릭한 Layer 저장
   const pendingLayerClick =
     useRef<LayerId | null>(null);
 
@@ -191,10 +195,11 @@ export function MapExplorer({
       containerRef.current?.clientHeight ??
       window.innerHeight;
 
-    const target = clamp({
-      x: vw / 2 - svgX,
-      y: vh / 2 - svgY,
-    });
+    const target =
+      clamp({
+        x: vw / 2 - svgX,
+        y: vh / 2 - svgY,
+      });
 
     api.start({
       x: target.x,
@@ -236,27 +241,29 @@ export function MapExplorer({
       movement: [mx, my],
       velocity: [vx, vy],
       direction: [dx, dy],
-      memo,
     }) => {
+      // ─────────────────────────
       // 드래그 시작
+      // ─────────────────────────
       if (first) {
         // 기존 관성 정지
         api.stop();
 
-        memo = {
+        // 현재 맵 위치 저장
+        dragStartRef.current = {
           x: x.get(),
           y: y.get(),
         };
       }
 
-      const {
-        x: ox,
-        y: oy,
-      } = memo as {
-        x: number;
-        y: number;
-      };
+      // 드래그 시작 위치
+      const ox =
+        dragStartRef.current.x;
 
+      const oy =
+        dragStartRef.current.y;
+
+      // 현재 이동량을 더함
       const rawX =
         ox + mx;
 
@@ -267,12 +274,7 @@ export function MapExplorer({
       // 드래그 종료
       // ─────────────────────────
       if (last) {
-        if (svgWrapRef.current) {
-          svgWrapRef.current.style.pointerEvents =
-            '';
-        }
-
-        // 클릭 처리
+        // 클릭이면 Layer 실행
         if (
           tap &&
           pendingLayerClick.current
@@ -302,7 +304,6 @@ export function MapExplorer({
                   INERTIA,
             });
 
-          // 손을 놓은 뒤 부드럽게 이동
           api.start({
             x: target.x,
             y: target.y,
@@ -315,7 +316,7 @@ export function MapExplorer({
           });
         }
 
-        return memo;
+        return;
       }
 
       // ─────────────────────────
@@ -327,15 +328,12 @@ export function MapExplorer({
           y: rawY,
         });
 
-      // 드래그 중에는
-      // 스프링 지연 없이 즉시 따라오게 함
+      // 즉시 따라오기
       api.start({
         x: target.x,
         y: target.y,
         immediate: true,
       });
-
-      return memo;
     },
     {
       target: containerRef,
@@ -361,6 +359,7 @@ export function MapExplorer({
     const target =
       e.target as Element;
 
+    // 어떤 Layer를 클릭했는지 저장
     pendingLayerClick.current =
       CLICKABLE_LAYERS.find(
         (id) =>
@@ -369,17 +368,10 @@ export function MapExplorer({
           )
       ) ?? null;
 
-    (
-      e.currentTarget as HTMLDivElement
-    ).setPointerCapture(
+    // pointer capture
+    e.currentTarget.setPointerCapture(
       e.pointerId
     );
-
-    // 드래그 시작 시 SVG 클릭 이벤트 잠시 차단
-    if (svgWrapRef.current) {
-      svgWrapRef.current.style.pointerEvents =
-        'none';
-    }
   }
 
   // ─────────────────────────────
@@ -438,13 +430,7 @@ export function MapExplorer({
           position: 'absolute',
           x,
           y,
-
-          // 브라우저에게 transform 애니메이션임을 알려줌
           willChange: 'transform',
-
-          // GPU 합성
-          transform:
-            undefined,
         }}
       >
         <div
@@ -472,7 +458,6 @@ export function MapExplorer({
           />
 
           <div
-            ref={svgWrapRef}
             className="relative"
             dangerouslySetInnerHTML={{
               __html: svgContent,
